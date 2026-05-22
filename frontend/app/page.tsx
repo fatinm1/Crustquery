@@ -138,7 +138,7 @@ export default function LandingPage() {
                     <stop offset="50%"  stopColor="white" stopOpacity="0.85" />
                     <stop offset="60%"  stopColor="white" stopOpacity="0" />
                     <stop offset="100%" stopColor="white" stopOpacity="0" />
-                    <animateTransform attributeName="gradientTransform" type="translate" from="-1600 0" to="1600 0" dur="3s" repeatCount="indefinite" />
+                    <animateTransform attributeName="gradientTransform" type="translate" from="-1600 0" to="1600 0" dur="5s" repeatCount="indefinite" />
                   </linearGradient>
                   <mask id="shimmerMask">
                     <text x="0" y="120" fontFamily="Syne, sans-serif" fontSize="118" fontWeight="800" fill="white" style={{ textTransform: 'uppercase', letterSpacing: '-2px' }}>CRUSTQUERY</text>
