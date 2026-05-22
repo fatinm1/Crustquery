@@ -1,7 +1,8 @@
 import json
 import os
 import httpx
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 SYSTEM_PROMPT = """You are an API orchestration agent for Crustdata, a B2B data platform.
 Your job is to parse a natural language query and return a structured JSON execution plan.
@@ -66,12 +67,12 @@ def _extract_json(text: str) -> dict:
 async def run_query(user_query: str) -> dict:
     crustdata_key = os.getenv("CRUSTDATA_API_KEY")
 
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-    model = genai.GenerativeModel("gemini-2.0-flash-lite")
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-    response = model.generate_content(
-        SYSTEM_PROMPT + "\n\nUser query: " + user_query,
-        generation_config=genai.types.GenerationConfig(
+    response = client.models.generate_content(
+        model="gemini-2.0-flash-lite",
+        contents=SYSTEM_PROMPT + "\n\nUser query: " + user_query,
+        config=types.GenerateContentConfig(
             temperature=0.1,
             response_mime_type="application/json",
         ),

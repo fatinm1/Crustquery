@@ -10,9 +10,11 @@ from agents.query_agent import run_query
 
 app = FastAPI(title="CrustQuery API")
 
+cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,5 +40,5 @@ async def query(request: QueryRequest):
 
 
 @app.get("/health")
-async def health():
-    return {"status": "ok"}
+def health():
+    return {"status": "ok", "service": "crustquery-api"}
