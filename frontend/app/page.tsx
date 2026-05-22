@@ -132,6 +132,17 @@ export default function LandingPage() {
                       <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
+                  <linearGradient id="shimmer" x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%"   stopColor="white" stopOpacity="0" />
+                    <stop offset="40%"  stopColor="white" stopOpacity="0" />
+                    <stop offset="50%"  stopColor="white" stopOpacity="0.85" />
+                    <stop offset="60%"  stopColor="white" stopOpacity="0" />
+                    <stop offset="100%" stopColor="white" stopOpacity="0" />
+                    <animateTransform attributeName="gradientTransform" type="translate" from="-1600 0" to="1600 0" dur="3s" repeatCount="indefinite" />
+                  </linearGradient>
+                  <mask id="shimmerMask">
+                    <text x="0" y="120" fontFamily="Syne, sans-serif" fontSize="118" fontWeight="800" fill="white" style={{ textTransform: 'uppercase', letterSpacing: '-2px' }}>CRUSTQUERY</text>
+                  </mask>
                 </defs>
 
                 {/* Layer 1 — white outline for extra pop */}
@@ -148,6 +159,9 @@ export default function LandingPage() {
                     <img src={MASK_IMAGE} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 </foreignObject>
+
+                {/* Layer 4 — shimmer light sweep */}
+                <rect x="0" y="0" width="1600" height="150" fill="url(#shimmer)" mask="url(#shimmerMask)" style={{ mixBlendMode: 'screen' }} />
               </svg>
             </div>
 
