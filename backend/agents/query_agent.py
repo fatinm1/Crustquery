@@ -1,7 +1,7 @@
 import json
 import os
 import httpx
-import anthropic
+import google.generativeai as genai
 
 SYSTEM_PROMPT = """You are an API orchestration agent for Crustdata, a B2B data platform.
 Your job is to parse a natural language query and return a structured JSON execution plan.
@@ -53,11 +53,9 @@ Always return a JSON object with this exact structure and nothing else:
 
 
 def _extract_json(text: str) -> dict:
-    """Extract JSON from Claude's response, handling markdown code blocks."""
     text = text.strip()
     if text.startswith("```"):
         lines = text.split("\n")
-        # Drop the opening ```json or ``` line and closing ```
         inner = "\n".join(lines[1:])
         if inner.rstrip().endswith("```"):
             inner = inner.rstrip()[:-3].rstrip()
@@ -66,24 +64,25 @@ def _extract_json(text: str) -> dict:
 
 
 async def run_query(user_query: str) -> dict:
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
     crustdata_key = os.getenv("CRUSTDATA_API_KEY")
 
-    client = anthropic.Anthropic(api_key=anthropic_key)
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    model = genai.GenerativeModel("gemini-2.0-flash")
 
-    message = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1024,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_query}],
+    response = model.generate_content(
+        SYSTEM_PROMPT + "\n\nUser query: " + user_query,
+        generation_config=genai.types.GenerationConfig(
+            temperature=0.1,
+            response_mime_type="application/json",
+        ),
     )
 
-    raw = message.content[0].text
+    raw = response.text
 
     try:
         plan = _extract_json(raw)
     except (json.JSONDecodeError, IndexError) as e:
-        raise ValueError(f"Claude returned malformed JSON: {e}\n\nRaw response:\n{raw}")
+        raise ValueError(f"Gemini returned malformed JSON: {e}\n\nRaw response:\n{raw}")
 
     payload = plan.get("payload", {})
     explanation = plan.get("explanation", "")
