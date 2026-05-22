@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useState } from 'react'
 
-const BG_IMAGE = 'https://images.unsplash.com/photo-1766340118459-2af615146bcd?w=1474&fit=crop&fm=jpg&q=80'
 const MASK_IMAGE = 'https://images.unsplash.com/photo-1652982261193-8160514e985b?w=1474&fit=crop&fm=jpg&q=80'
 
 const USE_CASES = [
@@ -81,18 +80,24 @@ export default function LandingPage() {
   const [iconHovered, setIconHovered] = useState(false)
 
   return (
-    <div style={{ minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
+    <div style={{ background: '#060608', minHeight: '100vh', position: 'relative' }}>
 
-      {/* Fixed background */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, backgroundImage: `url('${BG_IMAGE}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-      <div style={{ position: 'fixed', inset: 0, zIndex: 1, background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 100%)' }} />
+      {/* Background orbs */}
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '-200px', left: '-200px', width: '600px', height: '600px', background: '#6366f1', filter: 'blur(140px)', opacity: 0.12, borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', top: '40%', right: '-150px', width: '500px', height: '500px', background: '#06b6d4', filter: 'blur(140px)', opacity: 0.08, borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: '-100px', left: '35%', width: '450px', height: '450px', background: '#8b5cf6', filter: 'blur(120px)', opacity: 0.1, borderRadius: '50%' }} />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
       {/* Navbar */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-        background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        padding: '0 32px', height: '60px',
+        background: 'rgba(6, 6, 8, 0.8)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        padding: '0 24px', height: '60px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <span style={{ fontFamily: 'var(--font-syne)', fontSize: '20px', fontWeight: 800, color: 'white' }}>CrustQuery</span>
@@ -137,14 +142,12 @@ export default function LandingPage() {
               border: '1px solid rgba(255,255,255,0.1)',
               boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
               position: 'relative',
+              background: 'rgba(255,255,255,0.04)',
+              backdropFilter: 'blur(24px)',
             }}>
-              {/* Card bg layers */}
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('${BG_IMAGE}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent)' }} />
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('https://www.transparenttextures.com/patterns/stardust.png')", opacity: 0.03 }} />
 
               {/* Card content */}
-              <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '60px', padding: '56px 60px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '60px', padding: '56px 60px' }}>
 
                 {/* Left */}
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '28px' }}>
@@ -352,12 +355,10 @@ export default function LandingPage() {
               border: '1px solid rgba(255,255,255,0.1)',
               boxShadow: '0 25px 60px rgba(0,0,0,0.4)',
               position: 'relative', textAlign: 'center',
+              background: 'rgba(255,255,255,0.04)',
+              backdropFilter: 'blur(24px)',
             }}>
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('${BG_IMAGE}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)' }} />
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('https://www.transparenttextures.com/patterns/stardust.png')", opacity: 0.03 }} />
-
-              <div style={{ position: 'relative', zIndex: 1, padding: '80px 60px' }}>
+              <div style={{ padding: '80px 60px' }}>
                 <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: '48px', fontWeight: 800, color: 'white', marginBottom: '16px', lineHeight: 1.1 }}>
                   Start searching in seconds.
                 </h2>
@@ -406,6 +407,7 @@ export default function LandingPage() {
         </footer>
 
       </main>
+      </div>
     </div>
   )
 }
