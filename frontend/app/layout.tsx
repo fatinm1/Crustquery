@@ -8,8 +8,8 @@ const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "
 const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "CrustQuery",
-  description: "Natural language search for B2B data powered by Crustdata + Claude",
+  title: "CrustQuery — Natural Language B2B Search",
+  description: "Search 200M+ companies in plain English. Powered by Crustdata and Gemini.",
 };
 
 export default function RootLayout({
