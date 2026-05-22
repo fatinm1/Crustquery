@@ -67,7 +67,7 @@ async def run_query(user_query: str) -> dict:
     crustdata_key = os.getenv("CRUSTDATA_API_KEY")
 
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash-lite")
 
     response = model.generate_content(
         SYSTEM_PROMPT + "\n\nUser query: " + user_query,
