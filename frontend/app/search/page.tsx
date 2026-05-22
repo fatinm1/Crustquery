@@ -3,15 +3,17 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-const formatFunding = (usd: number | null) => {
-  if (!usd) return '—'
-  if (usd >= 1_000_000_000) return `$${(usd / 1_000_000_000).toFixed(1)}B`
-  if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(0)}M`
-  return `$${(usd / 1_000).toFixed(0)}K`
-}
+const BG_IMAGE = 'https://images.unsplash.com/photo-1766340118459-2af615146bcd?w=1474&fit=crop&fm=jpg&q=80'
+const MASK_IMAGE = 'https://images.unsplash.com/photo-1652982261193-8160514e985b?w=1474&fit=crop&fm=jpg&q=80'
 
-// Normalise flat dotted keys ("basic_info.name") into nested objects so both
-// API response shapes work transparently.
+const CHIPS = [
+  'AI startups in New York under 200 employees',
+  'Series B SaaS companies in San Francisco',
+  'Software companies founded after 2020 with $10M+ funding',
+  'Healthcare companies in USA with 500+ employees',
+]
+
+// Normalize flat dotted keys ("basic_info.name") into nested objects
 function normalise(raw: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [key, val] of Object.entries(raw)) {
@@ -28,17 +30,26 @@ function normalise(raw: Record<string, unknown>): Record<string, unknown> {
   return out
 }
 
-export default function Home() {
+const formatFunding = (usd: number | null) => {
+  if (!usd) return '—'
+  if (usd >= 1_000_000_000) return `$${(usd / 1_000_000_000).toFixed(1)}B`
+  if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(0)}M`
+  return `$${(usd / 1_000).toFixed(0)}K`
+}
+
+export default function SearchPage() {
   const [query, setQuery] = useState('')
-  const [focused, setFocused] = useState(false)
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<Record<string, unknown>[]>([])
   const [explanation, setExplanation] = useState('')
   const [totalCount, setTotalCount] = useState(0)
   const [error, setError] = useState('')
+  const [iconHovered, setIconHovered] = useState(false)
+  const [arrowHovered, setArrowHovered] = useState(false)
+  const [searchBtnHovered, setSearchBtnHovered] = useState(false)
 
   const handleSearch = async (overrideQuery?: string) => {
-    const q = overrideQuery || query
+    const q = overrideQuery ?? query
     if (!q.trim()) return
     setLoading(true)
     setError('')
@@ -48,7 +59,7 @@ export default function Home() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q })
+        body: JSON.stringify({ query: q }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || 'Query failed')
@@ -83,119 +94,266 @@ export default function Home() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text-primary)' }}>
+    <div style={{ minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
 
-      {/* Background orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div style={{ position: 'absolute', top: '-200px', left: '-200px', width: '600px', height: '600px', background: '#6366f1', filter: 'blur(140px)', opacity: 0.12, borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', top: '40%', right: '-150px', width: '500px', height: '500px', background: '#06b6d4', filter: 'blur(140px)', opacity: 0.08, borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', bottom: '-100px', left: '35%', width: '450px', height: '450px', background: '#8b5cf6', filter: 'blur(120px)', opacity: 0.1, borderRadius: '50%' }} />
-      </div>
+      {/* Full-page background */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 0,
+        backgroundImage: `url('${BG_IMAGE}')`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+      }} />
+      {/* Dark overlay */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 1,
+        background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 100%)',
+      }} />
 
       {/* Navbar */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(6,6,8,0.7)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)', padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/" style={{ fontFamily: 'var(--font-syne)', fontSize: '20px', fontWeight: 800, color: 'inherit', textDecoration: 'none' }}>CrustQuery</Link>
-        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'var(--surface)', border: '1px solid var(--border)', padding: '4px 12px', borderRadius: '100px' }}>
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '0 32px', height: '60px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <Link href="/" style={{ fontFamily: 'var(--font-syne)', fontSize: '20px', fontWeight: 800, color: 'white', textDecoration: 'none' }}>
+          CrustQuery
+        </Link>
+        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', padding: '4px 12px', borderRadius: '100px', fontFamily: 'var(--font-inter)' }}>
           Powered by Crustdata
         </span>
       </nav>
 
       {/* Main content */}
-      <main style={{ position: 'relative', zIndex: 1, padding: '0 24px 80px' }}>
+      <div style={{ position: 'relative', zIndex: 2, maxWidth: '1440px', margin: '0 auto', padding: '80px 40px 60px' }}>
 
-        {/* Hero */}
-        <section style={{ paddingTop: '140px', paddingBottom: '60px', textAlign: 'center' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '100px', padding: '6px 16px', marginBottom: '28px' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6366f1' }} />
-            <span style={{ fontSize: '13px', color: '#a5b4fc', fontWeight: 500 }}>Natural Language B2B Intelligence</span>
+        {/* Section 1 — SVG masked headline */}
+        <div style={{ marginBottom: '32px' }}>
+          <svg viewBox="0 0 1600 150" preserveAspectRatio="xMinYMid meet" style={{ width: '100%', height: '180px' }}>
+            <defs>
+              <mask id="textMask">
+                <text x="0" y="120" fontFamily="Syne, sans-serif" fontSize="118" fontWeight="800" fill="white" style={{ textTransform: 'uppercase', letterSpacing: '-2px' }}>CRUSTQUERY</text>
+              </mask>
+            </defs>
+            <foreignObject mask="url(#textMask)" width="100%" height="100%">
+              {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+              {/* @ts-ignore */}
+              <div xmlns="http://www.w3.org/1999/xhtml" style={{ width: '100%', height: '100%' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={MASK_IMAGE} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            </foreignObject>
+          </svg>
+        </div>
+
+        {/* Section 2 — Main glass card */}
+        <div style={{
+          borderRadius: '50px', overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+          position: 'relative',
+          marginBottom: '20px',
+        }}>
+          {/* Card background layers */}
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('${BG_IMAGE}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent)' }} />
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('https://www.transparenttextures.com/patterns/stardust.png')", opacity: 0.03 }} />
+
+          {/* Card content */}
+          <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '60px', padding: '56px 60px' }}>
+
+            {/* Left column */}
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '28px' }}>
+              {/* Icon badge */}
+              <div
+                onMouseEnter={() => setIconHovered(true)}
+                onMouseLeave={() => setIconHovered(false)}
+                style={{
+                  width: '80px', height: '80px',
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(20px)',
+                  borderRadius: '24px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'default',
+                  transform: iconHovered ? 'rotate(6deg)' : 'rotate(0deg)',
+                  transition: 'transform 500ms ease',
+                }}
+              >
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+
+              <div>
+                <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-inter)', lineHeight: 1.5, margin: 0 }}>
+                  Natural Language<br />B2B Intelligence
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[
+                  ['200M+', 'Company profiles'],
+                  ['<2s', 'Query time'],
+                  ['9', 'Searchable fields'],
+                ].map(([val, label]) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontFamily: 'var(--font-syne)', fontSize: '22px', fontWeight: 800, color: 'white' }}>{val}</span>
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-inter)' }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right column */}
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '24px' }}>
+              <p style={{ fontSize: '18px', color: 'white', lineHeight: 1.6, margin: 0, fontFamily: 'var(--font-inter)' }}>
+                CrustQuery translates your words into Crustdata API calls. No filters, no boolean logic — just ask in plain English.
+              </p>
+
+              {/* Search bar */}
+              <div style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '100px',
+                padding: '8px 8px 8px 24px',
+                display: 'flex', alignItems: 'center', gap: '12px',
+              }}>
+                <input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                  placeholder="Find AI startups in New York with 50 to 200 employees..."
+                  style={{
+                    flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                    color: 'white', fontSize: '15px', fontFamily: 'var(--font-inter)',
+                  }}
+                />
+                <button
+                  onClick={() => handleSearch()}
+                  disabled={loading || !query.trim()}
+                  onMouseEnter={() => setSearchBtnHovered(true)}
+                  onMouseLeave={() => setSearchBtnHovered(false)}
+                  style={{
+                    background: 'white', color: '#1a1a1a',
+                    border: 'none', borderRadius: '100px',
+                    padding: '10px 24px', fontSize: '15px',
+                    fontWeight: 600, cursor: loading || !query.trim() ? 'not-allowed' : 'pointer',
+                    opacity: loading || !query.trim() ? 0.5 : 1,
+                    transform: searchBtnHovered && !loading && query.trim() ? 'scale(1.05)' : 'scale(1)',
+                    transition: 'transform 0.2s, opacity 0.15s',
+                    fontFamily: 'var(--font-inter)',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {loading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+
+              {/* Example chips */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {CHIPS.map(chip => (
+                  <button
+                    key={chip}
+                    onClick={() => { setQuery(chip); handleSearch(chip) }}
+                    style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      borderRadius: '100px', padding: '6px 14px',
+                      fontSize: '13px', color: 'rgba(255,255,255,0.7)',
+                      cursor: 'pointer', transition: 'all 0.15s',
+                      fontFamily: 'var(--font-inter)',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; e.currentTarget.style.color = 'white' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)' }}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              {/* Arrow button */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                <button
+                  onClick={() => handleSearch()}
+                  onMouseEnter={() => setArrowHovered(true)}
+                  onMouseLeave={() => setArrowHovered(false)}
+                  style={{
+                    width: '96px', height: '96px', borderRadius: '50%',
+                    background: 'white', border: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer',
+                    transform: arrowHovered ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'transform 0.3s',
+                  }}
+                >
+                  <svg viewBox="19.588 20.146 159.561 159.541" style={{ width: '40px', height: '40px', color: '#1a1a1a' }}>
+                    <path fill="currentColor" d="M170.281 20.146v144.371L25.892 20.16l-6.27 6.268 144.421 144.393H19.588v8.866h159.561V20.146h-8.868z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
           </div>
-
-          <h1 style={{ fontFamily: 'var(--font-syne)', fontSize: 'clamp(36px, 6vw, 56px)', fontWeight: 800, lineHeight: 1.1, marginBottom: '20px' }}>
-            Search any company,<br />
-            <span style={{ background: 'linear-gradient(135deg, #6366f1, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              in plain English.
-            </span>
-          </h1>
-
-          <p style={{ fontSize: '18px', color: 'var(--text-secondary)', maxWidth: '520px', margin: '0 auto 48px', lineHeight: 1.6 }}>
-            CrustQuery translates your words into Crustdata API calls automatically. No filters, no boolean logic, no setup.
-          </p>
-        </section>
-
-        {/* Search bar */}
-        <div style={{ maxWidth: '680px', margin: '0 auto 24px', background: 'var(--surface)', backdropFilter: 'blur(24px)', border: `1px solid ${focused ? 'rgba(99,102,241,0.5)' : 'var(--border)'}`, boxShadow: focused ? '0 0 0 4px rgba(99,102,241,0.08)' : 'none', borderRadius: '14px', padding: '8px 8px 8px 20px', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}>
-          <input
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '15px', fontFamily: 'var(--font-jakarta)' }}
-            placeholder="Find AI startups in New York with 50 to 200 employees..."
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-          />
-          <button
-            onClick={() => handleSearch()}
-            disabled={loading || !query.trim()}
-            style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: '10px', padding: '10px 20px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', opacity: loading || !query.trim() ? 0.5 : 1, transition: 'all 0.15s', fontFamily: 'var(--font-jakarta)', whiteSpace: 'nowrap' }}
-          >
-            {loading ? 'Searching...' : 'Search'}
-          </button>
         </div>
 
-        {/* Chips */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '680px', margin: '0 auto 60px' }}>
-          {[
-            'AI startups in New York under 200 employees',
-            'Series B SaaS companies in San Francisco',
-            'Software companies founded after 2020 with $10M+ funding',
-            'Healthcare companies in USA with 500+ employees'
-          ].map(chip => (
-            <button key={chip}
-              onClick={() => { setQuery(chip); handleSearch(chip) }}
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '100px', padding: '7px 16px', fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'var(--font-jakarta)' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'; e.currentTarget.style.color = 'white' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)' }}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-
-        {/* Loading */}
+        {/* Section 3 — Loading */}
         {loading && (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
               {[0, 1, 2].map(i => (
-                <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                <div key={i} style={{
+                  width: '8px', height: '8px', borderRadius: '50%',
+                  background: 'white',
+                  animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+                }} />
               ))}
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Querying Crustdata...</p>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', fontFamily: 'var(--font-inter)' }}>
+              Querying Crustdata...
+            </p>
           </div>
         )}
 
-        {/* Error */}
-        {error && (
-          <div style={{ maxWidth: '680px', margin: '0 auto 24px', background: 'var(--error)', border: '1px solid var(--error-border)', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', color: '#fca5a5' }}>
-            {error}
-          </div>
-        )}
-
-        {/* Explanation card */}
+        {/* Section 4 — Explanation card */}
         {explanation && (
-          <div style={{ maxWidth: '900px', margin: '0 auto 20px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '12px', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{explanation}</span>
-            <span style={{ fontSize: '13px', color: '#a5b4fc', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: '16px' }}>{totalCount} results</span>
+          <div style={{
+            marginTop: '20px',
+            background: 'rgba(255,255,255,0.08)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '24px', padding: '16px 24px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-inter)' }}>
+              {explanation}
+            </span>
+            <span style={{ fontSize: '13px', color: 'white', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: '16px', fontFamily: 'var(--font-inter)' }}>
+              {totalCount} results
+            </span>
           </div>
         )}
 
-        {/* Results table */}
+        {/* Section 5 — Results table */}
         {results.length > 0 && (
-          <div style={{ maxWidth: '900px', margin: '0 auto 40px', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(24px)', border: '1px solid var(--border)', borderRadius: '16px', overflow: 'hidden' }}>
+          <div style={{
+            marginTop: '16px',
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '30px', overflow: 'hidden',
+          }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border)' }}>
+                <tr style={{ background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                   {['Company', 'Industry', 'Location', 'Headcount', 'Funding', 'Founded'].map(col => (
-                    <th key={col} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontFamily: 'var(--font-jakarta)' }}>{col}</th>
+                    <th key={col} style={{
+                      padding: '14px 20px', textAlign: 'left',
+                      fontSize: '11px', fontWeight: 600,
+                      letterSpacing: '0.08em', textTransform: 'uppercase',
+                      color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-inter)',
+                    }}>{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -208,32 +366,35 @@ export default function Home() {
                   const fu = company.funding as Record<string, unknown> | undefined
                   return (
                     <tr key={i}
-                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', transition: 'background 0.15s' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
-                      <td style={{ padding: '14px 16px' }}>
-                        <a href={`https://${bi?.primary_domain}`} target="_blank" rel="noopener noreferrer"
-                          style={{ color: 'white', textDecoration: 'none', fontWeight: 500, fontSize: '14px' }}
+                      <td style={{ padding: '14px 20px' }}>
+                        <a
+                          href={`https://${bi?.primary_domain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: 'white', textDecoration: 'none', fontWeight: 500, fontSize: '14px', fontFamily: 'var(--font-inter)' }}
                           onMouseEnter={e => (e.currentTarget.style.color = '#a5b4fc')}
                           onMouseLeave={e => (e.currentTarget.style.color = 'white')}
                         >
                           {String(bi?.name || 'Unknown')}
                         </a>
                       </td>
-                      <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-inter)' }}>
                         {String(tx?.professional_network_industry || '—')}
                       </td>
-                      <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-inter)' }}>
                         {String(lo?.country || '—')}
                       </td>
-                      <td style={{ padding: '14px 16px', fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
                         {hc?.total != null ? Number(hc.total).toLocaleString() : '—'}
                       </td>
-                      <td style={{ padding: '14px 16px', fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
                         {formatFunding(fu?.total_investment_usd as number | null)}
                       </td>
-                      <td style={{ padding: '14px 16px', fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '14px 20px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
                         {String(bi?.year_founded || '—')}
                       </td>
                     </tr>
@@ -242,16 +403,35 @@ export default function Home() {
               </tbody>
             </table>
 
-            {/* CSV Export */}
-            <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={exportCSV} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 16px', fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font-jakarta)' }}>
+            <div style={{ padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={exportCSV} style={{
+                background: 'white', color: '#1a1a1a',
+                border: 'none', borderRadius: '100px',
+                padding: '8px 20px', fontSize: '13px',
+                fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)',
+              }}>
                 Export CSV
               </button>
             </div>
           </div>
         )}
 
-      </main>
+        {/* Section 6 — Error */}
+        {error && (
+          <div style={{
+            marginTop: '16px',
+            background: 'rgba(239,68,68,0.1)',
+            border: '1px solid rgba(239,68,68,0.25)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '24px', padding: '14px 24px',
+            fontSize: '14px', color: '#fca5a5',
+            fontFamily: 'var(--font-inter)',
+          }}>
+            {error}
+          </div>
+        )}
+
+      </div>
     </div>
   )
 }

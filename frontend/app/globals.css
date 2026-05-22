@@ -30,3 +30,10 @@ body {
   0%, 100% { opacity: 0.3; transform: scale(0.8); }
   50% { opacity: 1; transform: scale(1); }
 }
+
+@keyframes blob-float {
+  0%   { transform: translate(0px, 0px) rotate(0deg) scale(1); }
+  33%  { transform: translate(100px, -150px) rotate(120deg) scale(1.2); }
+  66%  { transform: translate(-100px, 100px) rotate(240deg) scale(0.8); }
+  100% { transform: translate(0px, 0px) rotate(360deg) scale(1); }
+}
