@@ -3,287 +3,406 @@
 import Link from 'next/link'
 import { useState } from 'react'
 
-const STEPS = [
-  {
-    number: '01',
-    title: 'Type your question',
-    description: 'Describe what you\'re looking for in plain English. No syntax, no filters, no documentation required.',
-    example: '"Find Series B SaaS companies in San Francisco with 100–500 employees"',
-  },
-  {
-    number: '02',
-    title: 'Claude builds the query',
-    description: 'Our AI parses your intent and constructs the exact Crustdata API call — filters, operators, field selection, all of it.',
-    example: 'POST /company/search with nested boolean filter conditions',
-  },
-  {
-    number: '03',
-    title: 'Results, instantly',
-    description: 'A clean table of matching companies with funding, headcount, location, and domain links. Export to CSV in one click.',
-    example: '42 companies returned in under 2 seconds',
-  },
-]
+const BG_IMAGE = 'https://images.unsplash.com/photo-1766340118459-2af615146bcd?w=1474&fit=crop&fm=jpg&q=80'
+const MASK_IMAGE = 'https://images.unsplash.com/photo-1652982261193-8160514e985b?w=1474&fit=crop&fm=jpg&q=80'
 
-const FEATURES = [
+const USE_CASES = [
   {
-    icon: '⬡',
-    title: 'Natural language input',
-    description: 'No API docs, no filter builder, no boolean logic. Just describe what you want.',
+    icon: '↗',
+    role: 'Sales Teams',
+    description: 'Find 50 Series B SaaS companies in New York hiring a VP of Sales. In one sentence.',
+    query: 'Series B SaaS companies in New York with 50 to 500 employees',
+  },
+  {
+    icon: '◎',
+    role: 'Recruiters',
+    description: 'Source companies by headcount growth, funding stage, and location. No spreadsheets.',
+    query: 'Software companies founded after 2020 with $10M+ funding in USA',
   },
   {
     icon: '⬡',
-    title: 'Real Crustdata results',
-    description: 'Pulls live data from Crustdata\'s company search API — millions of B2B data points.',
-  },
-  {
-    icon: '⬡',
-    title: 'Complex queries handled',
-    description: 'Headcount ranges, funding stages, founding years, geography — all combined automatically.',
-  },
-  {
-    icon: '⬡',
-    title: 'CSV export',
-    description: 'Download any result set as a CSV file. Drop it straight into your CRM or spreadsheet.',
-  },
-  {
-    icon: '⬡',
-    title: 'Instant explanation',
-    description: 'Every search shows a plain-English summary of exactly what was queried so you can trust the results.',
-  },
-  {
-    icon: '⬡',
-    title: 'Zero setup',
-    description: 'No account, no configuration, no SDK to integrate. Open the app and start searching.',
+    role: 'Investors',
+    description: 'Map entire verticals in seconds. See who is growing, who just raised, who is hiring.',
+    query: 'Healthcare companies in USA with 500+ employees',
   },
 ]
 
 const EXAMPLE_QUERIES = [
-  'Find AI startups in New York under 200 employees',
+  'AI startups in New York under 200 employees',
   'Series B SaaS companies in San Francisco',
-  'Software companies founded after 2020 with $10M+ funding',
   'Healthcare companies in USA with 500+ employees',
-  'Fintech startups in London with Seed or Series A funding',
-  'Enterprise software companies with 1000+ employees in Germany',
+  'Software companies founded after 2020 with $10M+ funding',
+  'Fintech companies in London with 100 to 500 employees',
+  'EdTech startups founded after 2018 with seed funding',
 ]
 
-const STATS = [
-  { value: '200M+', label: 'Company profiles' },
-  { value: '<2s', label: 'Average query time' },
-  { value: '9', label: 'Searchable fields' },
-  { value: '∞', label: 'Query combinations' },
+const STEPS = [
+  {
+    number: '01',
+    icon: '✦',
+    title: 'Ask in plain English',
+    description: 'Type your query naturally. No boolean logic, no filter menus, no documentation needed.',
+  },
+  {
+    number: '02',
+    icon: '◈',
+    title: 'AI Orchestrates the API',
+    description: 'CrustQuery uses Gemini to parse your query and automatically calls the right Crustdata endpoints.',
+  },
+  {
+    number: '03',
+    icon: '↓',
+    title: 'Get Instant Results',
+    description: 'Results appear in seconds. Export to CSV or refine your query with a follow-up.',
+  },
 ]
+
+const glassCard = {
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  backdropFilter: 'blur(20px)' as const,
+  borderRadius: '30px',
+  padding: '32px',
+}
+
+const iconBadge = {
+  width: '48px', height: '48px',
+  background: 'rgba(255,255,255,0.1)',
+  border: '1px solid rgba(255,255,255,0.2)',
+  backdropFilter: 'blur(20px)' as const,
+  borderRadius: '16px',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontSize: '20px', color: 'white',
+  flexShrink: 0 as const,
+}
 
 export default function LandingPage() {
-  const [hoveredFeature, setHoveredFeature] = useState<number | null>(null)
+  const [arrowHovered, setArrowHovered] = useState(false)
+  const [iconHovered, setIconHovered] = useState(false)
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text-primary)', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
 
-      {/* Background orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div style={{ position: 'absolute', top: '-200px', left: '-200px', width: '700px', height: '700px', background: '#6366f1', filter: 'blur(160px)', opacity: 0.1, borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', top: '30%', right: '-200px', width: '600px', height: '600px', background: '#06b6d4', filter: 'blur(160px)', opacity: 0.07, borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', bottom: '10%', left: '30%', width: '500px', height: '500px', background: '#8b5cf6', filter: 'blur(140px)', opacity: 0.08, borderRadius: '50%' }} />
-      </div>
+      {/* Fixed background */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, backgroundImage: `url('${BG_IMAGE}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 1, background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 100%)' }} />
 
       {/* Navbar */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(6,6,8,0.7)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)', padding: '0 32px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: 'var(--font-syne)', fontSize: '20px', fontWeight: 800 }}>CrustQuery</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'var(--surface)', border: '1px solid var(--border)', padding: '4px 12px', borderRadius: '100px' }}>
-            Powered by Crustdata
-          </span>
-          <Link href="/search" style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', padding: '8px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', textDecoration: 'none', fontFamily: 'var(--font-jakarta)' }}>
-            Try it free →
-          </Link>
-        </div>
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '0 32px', height: '60px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <span style={{ fontFamily: 'var(--font-syne)', fontSize: '20px', fontWeight: 800, color: 'white' }}>CrustQuery</span>
+        <Link href="/search" style={{
+          background: 'white', color: '#1a1a1a',
+          borderRadius: '100px', padding: '8px 20px',
+          fontSize: '14px', fontWeight: 600,
+          textDecoration: 'none', fontFamily: 'var(--font-inter)',
+        }}>
+          Get Started
+        </Link>
       </nav>
 
-      <main style={{ position: 'relative', zIndex: 1 }}>
+      {/* Main content */}
+      <main style={{ position: 'relative', zIndex: 2 }}>
+        <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 40px' }}>
 
-        {/* ── Hero ── */}
-        <section style={{ paddingTop: '160px', paddingBottom: '100px', textAlign: 'center', padding: '160px 24px 100px' }}>
+          {/* ── Hero ── */}
+          <section style={{ paddingTop: '100px', paddingBottom: '80px' }}>
 
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '100px', padding: '6px 16px', marginBottom: '32px' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 8px #6366f1' }} />
-            <span style={{ fontSize: '13px', color: '#a5b4fc', fontWeight: 500 }}>Natural Language B2B Intelligence</span>
-          </div>
-
-          <h1 style={{ fontFamily: 'var(--font-syne)', fontSize: 'clamp(40px, 7vw, 72px)', fontWeight: 800, lineHeight: 1.05, marginBottom: '24px', maxWidth: '800px', margin: '0 auto 24px' }}>
-            Find any company.<br />
-            <span style={{ background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Just ask for it.
-            </span>
-          </h1>
-
-          <p style={{ fontSize: '19px', color: 'var(--text-secondary)', maxWidth: '560px', margin: '0 auto 48px', lineHeight: 1.65 }}>
-            CrustQuery turns plain English questions into Crustdata API calls. No filters. No boolean logic. No documentation.
-          </p>
-
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/search" style={{ background: '#6366f1', color: 'white', borderRadius: '12px', padding: '14px 28px', fontSize: '15px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-jakarta)', display: 'inline-block', transition: 'opacity 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-            >
-              Start searching →
-            </Link>
-            <a href="#how-it-works" style={{ background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '12px', padding: '14px 28px', fontSize: '15px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-jakarta)', display: 'inline-block', backdropFilter: 'blur(12px)' }}>
-              See how it works
-            </a>
-          </div>
-
-          {/* Hero query preview */}
-          <div style={{ maxWidth: '660px', margin: '64px auto 0', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(24px)', border: '1px solid var(--border)', borderRadius: '16px', overflow: 'hidden' }}>
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-              <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginLeft: '8px', fontFamily: 'var(--font-mono)' }}>crustquery.app</span>
-            </div>
-            <div style={{ padding: '20px' }}>
-              <div style={{ background: 'var(--surface)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', boxShadow: '0 0 0 3px rgba(99,102,241,0.08)' }}>
-                <span style={{ color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'var(--font-jakarta)' }}>Find AI startups in New York with 50 to 200 employees</span>
-                <span style={{ marginLeft: 'auto', background: '#6366f1', color: 'white', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>Search</span>
-              </div>
-              <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Searching Software Development companies in New York, USA with 50–200 employees</span>
-                <span style={{ fontSize: '12px', color: '#a5b4fc', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: '12px' }}>38 results</span>
-              </div>
-              {[
-                { name: 'Cohere', domain: 'cohere.com', hc: '312', funding: '$445M', founded: '2019' },
-                { name: 'Hugging Face', domain: 'huggingface.co', hc: '180', funding: '$235M', founded: '2016' },
-                { name: 'Weights & Biases', domain: 'wandb.ai', hc: '250', funding: '$250M', founded: '2018' },
-              ].map((row, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr', gap: '8px', padding: '10px 0', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 500, color: 'white' }}>{row.name}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>{row.domain}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{row.hc}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{row.funding}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{row.founded}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Stats ── */}
-        <section style={{ padding: '0 24px 100px' }}>
-          <div style={{ maxWidth: '860px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: 'var(--border)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-            {STATS.map((stat) => (
-              <div key={stat.label} style={{ background: 'var(--bg)', padding: '32px 24px', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--font-syne)', fontSize: '36px', fontWeight: 800, color: 'white', marginBottom: '6px' }}>{stat.value}</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── How it works ── */}
-        <section id="how-it-works" style={{ padding: '0 24px 120px' }}>
-          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-              <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, marginBottom: '16px' }}>How it works</h2>
-              <p style={{ fontSize: '16px', color: 'var(--text-secondary)', maxWidth: '440px', margin: '0 auto', lineHeight: 1.6 }}>Three steps from question to data. No setup, no configuration.</p>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {STEPS.map((step, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '32px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px', backdropFilter: 'blur(12px)', marginBottom: i < STEPS.length - 1 ? '2px' : 0 }}>
-                  <div>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--accent)', fontWeight: 500 }}>{step.number}</span>
-                    <div style={{ width: '40px', height: '1px', background: 'var(--border)', marginTop: '12px' }} />
+            {/* SVG masked headline */}
+            <div style={{ marginBottom: '32px' }}>
+              <svg viewBox="0 0 1600 150" preserveAspectRatio="xMinYMid meet" style={{ width: '100%', height: '180px' }}>
+                <defs>
+                  <mask id="textMask">
+                    <text x="0" y="120" fontFamily="Syne, sans-serif" fontSize="118" fontWeight="800" fill="white" style={{ textTransform: 'uppercase', letterSpacing: '-2px' }}>CRUSTQUERY</text>
+                  </mask>
+                </defs>
+                <foreignObject mask="url(#textMask)" width="100%" height="100%">
+                  {/* @ts-expect-error — foreignObject xmlns required for SVG mask */}
+                  <div xmlns="http://www.w3.org/1999/xhtml" style={{ width: '100%', height: '100%' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={MASK_IMAGE} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
-                  <div>
-                    <h3 style={{ fontFamily: 'var(--font-syne)', fontSize: '20px', fontWeight: 700, marginBottom: '10px' }}>{step.title}</h3>
-                    <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '16px' }}>{step.description}</p>
-                    <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: '8px', padding: '10px 14px' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#a5b4fc' }}>{step.example}</span>
+                </foreignObject>
+              </svg>
+            </div>
+
+            {/* Hero glass card */}
+            <div style={{
+              borderRadius: '50px', overflow: 'hidden',
+              border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+              position: 'relative',
+            }}>
+              {/* Card bg layers */}
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('${BG_IMAGE}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent)' }} />
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('https://www.transparenttextures.com/patterns/stardust.png')", opacity: 0.03 }} />
+
+              {/* Card content */}
+              <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '60px', padding: '56px 60px' }}>
+
+                {/* Left */}
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '28px' }}>
+                  <div
+                    onMouseEnter={() => setIconHovered(true)}
+                    onMouseLeave={() => setIconHovered(false)}
+                    style={{
+                      width: '80px', height: '80px',
+                      background: 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      backdropFilter: 'blur(20px)',
+                      borderRadius: '24px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'default',
+                      transform: iconHovered ? 'rotate(6deg)' : 'rotate(0deg)',
+                      transition: 'transform 500ms ease',
+                    }}
+                  >
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+
+                  <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-inter)', lineHeight: 1.5, margin: 0 }}>
+                    Search 200M+ companies<br />in plain English
+                  </p>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {['200M+ Companies', 'Real-time Data', 'No Setup Required'].map(stat => (
+                      <span key={stat} style={{
+                        background: 'rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: '100px', padding: '6px 14px',
+                        fontSize: '13px', color: 'rgba(255,255,255,0.8)',
+                        fontFamily: 'var(--font-inter)',
+                      }}>{stat}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right */}
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '28px' }}>
+                  <h1 style={{ fontFamily: 'var(--font-syne)', fontSize: '42px', fontWeight: 800, color: 'white', lineHeight: 1.1, margin: 0 }}>
+                    Stop wrestling with<br />B2B data filters.
+                  </h1>
+
+                  <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-inter)', lineHeight: 1.6, margin: 0 }}>
+                    CrustQuery turns your plain English questions into Crustdata API calls automatically. Ask anything. Get results instantly.
+                  </p>
+
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <Link href="/search" style={{
+                      background: 'white', color: '#1a1a1a',
+                      borderRadius: '100px', padding: '12px 28px',
+                      fontSize: '15px', fontWeight: 600,
+                      textDecoration: 'none', fontFamily: 'var(--font-inter)',
+                    }}>
+                      Try CrustQuery
+                    </Link>
+                    <a href="https://github.com/fatinm1/Crustquery" target="_blank" rel="noopener noreferrer" style={{
+                      background: 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      color: 'white', borderRadius: '100px',
+                      padding: '12px 28px', fontSize: '15px',
+                      fontWeight: 500, textDecoration: 'none',
+                      fontFamily: 'var(--font-inter)',
+                      backdropFilter: 'blur(20px)',
+                    }}>
+                      View on GitHub
+                    </a>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Link href="/search"
+                      onMouseEnter={() => setArrowHovered(true)}
+                      onMouseLeave={() => setArrowHovered(false)}
+                      style={{
+                        width: '96px', height: '96px', borderRadius: '50%',
+                        background: 'white', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        transform: arrowHovered ? 'scale(1.1)' : 'scale(1)',
+                        transition: 'transform 0.3s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <svg viewBox="19.588 20.146 159.561 159.541" style={{ width: '40px', height: '40px', color: '#1a1a1a' }}>
+                        <path fill="currentColor" d="M170.281 20.146v144.371L25.892 20.16l-6.27 6.268 144.421 144.393H19.588v8.866h159.561V20.146h-8.868z" />
+                      </svg>
+                    </Link>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          {/* ── How It Works ── */}
+          <section style={{ paddingBottom: '80px' }}>
+            <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: '36px', fontWeight: 800, color: 'white', marginBottom: '40px', textAlign: 'center' }}>
+              How it works
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              {STEPS.map((step) => (
+                <div key={step.number} style={{ ...glassCard, position: 'relative', overflow: 'hidden' }}>
+                  {/* Large ghost number */}
+                  <div style={{
+                    position: 'absolute', top: '-10px', right: '20px',
+                    fontFamily: 'var(--font-syne)', fontSize: '80px', fontWeight: 800,
+                    color: 'rgba(255,255,255,0.06)', lineHeight: 1, userSelect: 'none',
+                    pointerEvents: 'none',
+                  }}>{step.number}</div>
+
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={iconBadge}>{step.icon}</div>
+                    <div>
+                      <h3 style={{ fontFamily: 'var(--font-syne)', fontSize: '20px', fontWeight: 700, color: 'white', marginBottom: '10px' }}>
+                        {step.title}
+                      </h3>
+                      <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-inter)', lineHeight: 1.6, margin: 0 }}>
+                        {step.description}
+                      </p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ── Features ── */}
-        <section style={{ padding: '0 24px 120px' }}>
-          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-              <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, marginBottom: '16px' }}>Everything you need</h2>
-              <p style={{ fontSize: '16px', color: 'var(--text-secondary)', maxWidth: '440px', margin: '0 auto', lineHeight: 1.6 }}>Built for sales, recruiting, and VC teams who need company data fast.</p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
-              {FEATURES.map((feature, i) => (
-                <div key={i}
-                  onMouseEnter={() => setHoveredFeature(i)}
-                  onMouseLeave={() => setHoveredFeature(null)}
-                  style={{ background: hoveredFeature === i ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)', border: `1px solid ${hoveredFeature === i ? 'rgba(99,102,241,0.3)' : 'var(--border)'}`, borderRadius: '14px', padding: '28px', transition: 'all 0.2s', backdropFilter: 'blur(12px)', cursor: 'default' }}>
-                  <div style={{ width: '36px', height: '36px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', fontSize: '16px', color: '#a5b4fc' }}>
-                    {['↗', '◈', '⊞', '↓', '≋', '◎'][i]}
+          {/* ── Use Cases ── */}
+          <section style={{ paddingBottom: '80px' }}>
+            <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: '36px', fontWeight: 800, color: 'white', marginBottom: '16px', textAlign: 'center' }}>
+              Built for teams that move fast
+            </h2>
+            <p style={{ fontSize: '17px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-inter)', textAlign: 'center', marginBottom: '40px' }}>
+              From sourcing to research — CrustQuery fits how you already think.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              {USE_CASES.map((uc) => (
+                <div key={uc.role} style={{ ...glassCard, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={iconBadge}>{uc.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontFamily: 'var(--font-syne)', fontSize: '18px', fontWeight: 700, color: 'white', marginBottom: '10px' }}>
+                      {uc.role}
+                    </h3>
+                    <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-inter)', lineHeight: 1.6, margin: 0 }}>
+                      {uc.description}
+                    </p>
                   </div>
-                  <h3 style={{ fontFamily: 'var(--font-syne)', fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>{feature.title}</h3>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{feature.description}</p>
+                  <Link
+                    href={`/search`}
+                    style={{
+                      display: 'inline-block',
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      borderRadius: '100px', padding: '8px 16px',
+                      fontSize: '13px', color: 'rgba(255,255,255,0.7)',
+                      textDecoration: 'none', fontFamily: 'var(--font-inter)',
+                      transition: 'all 0.15s',
+                      alignSelf: 'flex-start',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; e.currentTarget.style.color = 'white' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)' }}
+                  >
+                    &ldquo;{uc.query}&rdquo; →
+                  </Link>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ── Example queries ── */}
-        <section style={{ padding: '0 24px 120px' }}>
-          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-              <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, marginBottom: '16px' }}>What you can ask</h2>
-              <p style={{ fontSize: '16px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>Any question about companies, in any phrasing.</p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-              {EXAMPLE_QUERIES.map((q, i) => (
-                <Link key={i} href={`/search`}
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textDecoration: 'none', transition: 'all 0.2s', backdropFilter: 'blur(12px)' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.35)'; e.currentTarget.style.background = 'rgba(99,102,241,0.04)' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
+          {/* ── Example Queries ── */}
+          <section style={{ paddingBottom: '80px' }}>
+            <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: '36px', fontWeight: 800, color: 'white', marginBottom: '16px', textAlign: 'center' }}>
+              Ask anything
+            </h2>
+            <p style={{ fontSize: '17px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-inter)', textAlign: 'center', marginBottom: '40px' }}>
+              Any question about companies, in any phrasing.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              {EXAMPLE_QUERIES.map((q) => (
+                <Link key={q} href="/search" style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '16px', padding: '16px 20px',
+                  fontSize: '15px', color: 'rgba(255,255,255,0.8)',
+                  textDecoration: 'none', fontFamily: 'var(--font-inter)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  gap: '12px', transition: 'all 0.15s',
+                  backdropFilter: 'blur(20px)',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; e.currentTarget.style.color = 'white' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)' }}
                 >
-                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontFamily: 'var(--font-jakarta)', lineHeight: 1.4 }}>&ldquo;{q}&rdquo;</span>
-                  <span style={{ color: 'rgba(99,102,241,0.6)', fontSize: '16px', flexShrink: 0 }}>→</span>
+                  <span>&ldquo;{q}&rdquo;</span>
+                  <span style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }}>→</span>
                 </Link>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ── CTA ── */}
-        <section style={{ padding: '0 24px 120px' }}>
-          <div style={{ maxWidth: '700px', margin: '0 auto', background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '24px', padding: '72px 48px', textAlign: 'center', backdropFilter: 'blur(24px)', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: '-80px', left: '50%', transform: 'translateX(-50%)', width: '300px', height: '300px', background: '#6366f1', filter: 'blur(100px)', opacity: 0.12, borderRadius: '50%', pointerEvents: 'none' }} />
-            <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 800, marginBottom: '16px', position: 'relative' }}>
-              Ready to search smarter?
-            </h2>
-            <p style={{ fontSize: '17px', color: 'var(--text-secondary)', marginBottom: '40px', lineHeight: 1.6, position: 'relative' }}>
-              No account needed. Just open the app and start asking.
-            </p>
-            <Link href="/search"
-              style={{ background: '#6366f1', color: 'white', borderRadius: '12px', padding: '16px 36px', fontSize: '16px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-jakarta)', display: 'inline-block', position: 'relative', transition: 'opacity 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-            >
-              Open CrustQuery →
-            </Link>
-          </div>
-        </section>
+          {/* ── CTA ── */}
+          <section style={{ paddingBottom: '80px' }}>
+            <div style={{
+              borderRadius: '50px', overflow: 'hidden',
+              border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.4)',
+              position: 'relative', textAlign: 'center',
+            }}>
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('${BG_IMAGE}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)' }} />
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('https://www.transparenttextures.com/patterns/stardust.png')", opacity: 0.03 }} />
+
+              <div style={{ position: 'relative', zIndex: 1, padding: '80px 60px' }}>
+                <h2 style={{ fontFamily: 'var(--font-syne)', fontSize: '48px', fontWeight: 800, color: 'white', marginBottom: '16px', lineHeight: 1.1 }}>
+                  Start searching in seconds.
+                </h2>
+                <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-inter)', marginBottom: '40px' }}>
+                  No signup. No API key. Just ask.
+                </p>
+                <Link href="/search" style={{
+                  display: 'inline-block',
+                  background: 'white', color: '#1a1a1a',
+                  borderRadius: '100px', padding: '16px 40px',
+                  fontSize: '16px', fontWeight: 600,
+                  textDecoration: 'none', fontFamily: 'var(--font-inter)',
+                  marginBottom: '24px',
+                }}>
+                  Try CrustQuery Free
+                </Link>
+                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-inter)', margin: 0 }}>
+                  Powered by Crustdata + Gemini
+                </p>
+              </div>
+            </div>
+          </section>
+
+        </div>
 
         {/* ── Footer ── */}
-        <footer style={{ borderTop: '1px solid var(--border)', padding: '32px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-          <span style={{ fontFamily: 'var(--font-syne)', fontSize: '16px', fontWeight: 800 }}>CrustQuery</span>
-          <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Built on Crustdata · Powered by Gemini</span>
-          <Link href="/search" style={{ fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'none' }}
+        <footer style={{
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          padding: '28px 40px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: '12px',
+          maxWidth: '1440px', margin: '0 auto',
+        }}>
+          <span style={{ fontFamily: 'var(--font-syne)', fontSize: '18px', fontWeight: 700, color: 'white' }}>CrustQuery</span>
+          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-inter)' }}>Built by Fatin Mojumder</span>
+          <a href="https://github.com/fatinm1/Crustquery" target="_blank" rel="noopener noreferrer"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontFamily: 'var(--font-inter)' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
           >
-            Launch app →
-          </Link>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
+            </svg>
+            GitHub
+          </a>
         </footer>
 
       </main>
