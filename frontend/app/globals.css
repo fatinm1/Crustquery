@@ -31,6 +31,11 @@ body {
   50% { opacity: 1; transform: scale(1); }
 }
 
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
 @keyframes blob-float {
   0%   { transform: translate(0px, 0px) rotate(0deg) scale(1); }
   33%  { transform: translate(100px, -150px) rotate(120deg) scale(1.2); }

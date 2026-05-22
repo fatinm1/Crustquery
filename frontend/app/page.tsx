@@ -125,7 +125,22 @@ export default function LandingPage() {
                   <mask id="textMask">
                     <text x="0" y="120" fontFamily="Syne, sans-serif" fontSize="118" fontWeight="800" fill="white" style={{ textTransform: 'uppercase', letterSpacing: '-2px' }}>CRUSTQUERY</text>
                   </mask>
+                  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="8" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
                 </defs>
+
+                {/* Layer 1 — white outline for extra pop */}
+                <text x="0" y="120" fontFamily="Syne, sans-serif" fontSize="118" fontWeight="800" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" style={{ textTransform: 'uppercase', letterSpacing: '-2px' }}>CRUSTQUERY</text>
+
+                {/* Layer 2 — animated indigo glow */}
+                <text x="0" y="120" fontFamily="Syne, sans-serif" fontSize="118" fontWeight="800" fill="rgba(99,102,241,0.4)" filter="url(#glow)" style={{ textTransform: 'uppercase', letterSpacing: '-2px', animation: 'glow-pulse 3s ease-in-out infinite' }}>CRUSTQUERY</text>
+
+                {/* Layer 3 — iridescent image masked text */}
                 <foreignObject mask="url(#textMask)" width="100%" height="100%">
                   {/* @ts-expect-error — foreignObject xmlns required for SVG mask */}
                   <div xmlns="http://www.w3.org/1999/xhtml" style={{ width: '100%', height: '100%' }}>
