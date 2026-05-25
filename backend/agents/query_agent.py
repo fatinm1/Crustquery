@@ -39,7 +39,7 @@ Key searchable fields for company search:
 - basic_info.name — company name (type: =)
 - basic_info.primary_domain — website domain (type: =)
 - basic_info.year_founded — year founded (type: >, <, =>, =<)
-- locations.country — country only, use "USA" for United States (type: =, in). NOTE: city-level filtering is NOT supported. If user asks for a specific city, filter by country only and mention in the explanation that city filtering is unavailable.
+- locations.country — use exact country names as they appear in Crustdata (type: =, in). Common values: "USA" for United States, "United Kingdom" for UK, "India" for India, "Canada" for Canada, "Germany" for Germany, "France" for France, "Australia" for Australia. Always use "USA" not "United States" or "US". NOTE: city-level filtering is NOT supported. If user asks for a specific city, filter by country only and mention in the explanation that city filtering is unavailable.
 - headcount.total — total employees (type: >, <, =>, =<)
 - funding.total_investment_usd — total funding in USD (type: >, <, =>, =<)
 - funding.last_round_type — funding stage e.g. "Series A", "Series B", "Seed" (type: =, in)
