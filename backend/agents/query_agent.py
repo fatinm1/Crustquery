@@ -3,6 +3,7 @@ import logging
 import os
 import httpx
 import anthropic
+from fastapi import HTTPException
 
 SYSTEM_PROMPT = """You are an API orchestration agent for Crustdata, a B2B data platform.
 Your job is to parse a natural language query and return a structured JSON execution plan.
@@ -87,18 +88,23 @@ async def run_query(user_query: str) -> dict:
     payload = plan.get("payload", {})
     explanation = plan.get("explanation", "")
 
-    async with httpx.AsyncClient(timeout=30) as http:
-        response = await http.post(
-            "https://api.crustdata.com/company/search",
-            headers={
-                "Authorization": f"Bearer {crustdata_key}",
-                "x-api-version": "2025-11-01",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-        )
-        response.raise_for_status()
-        data = response.json()
+    response = httpx.post(
+        "https://api.crustdata.com/company/search",
+        headers={
+            "Authorization": f"Bearer {crustdata_key}",
+            "x-api-version": "2025-11-01",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=30.0,
+    )
+
+    if response.status_code != 200:
+        logging.error(f"Crustdata error. Payload sent:\n{json.dumps(payload, indent=2)}")
+        logging.error(f"Crustdata error response: {response.text}")
+        raise HTTPException(status_code=500, detail=f"Crustdata API error: {response.text}")
+
+    data = response.json()
 
     logging.info(f"Crustdata raw response keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
     logging.info(f"Crustdata raw response sample: {str(data)[:500]}")
