@@ -1,8 +1,7 @@
 import json
 import os
 import httpx
-from google import genai
-from google.genai import types
+import anthropic
 
 SYSTEM_PROMPT = """You are an API orchestration agent for Crustdata, a B2B data platform.
 Your job is to parse a natural language query and return a structured JSON execution plan.
@@ -67,23 +66,22 @@ def _extract_json(text: str) -> dict:
 async def run_query(user_query: str) -> dict:
     crustdata_key = os.getenv("CRUSTDATA_API_KEY")
 
-    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-lite",
-        contents=SYSTEM_PROMPT + "\n\nUser query: " + user_query,
-        config=types.GenerateContentConfig(
-            temperature=0.1,
-            response_mime_type="application/json",
-        ),
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1000,
+        messages=[
+            {"role": "user", "content": SYSTEM_PROMPT + "\n\nUser query: " + user_query}
+        ],
     )
 
-    raw = response.text
+    raw = response.content[0].text
 
     try:
         plan = _extract_json(raw)
     except (json.JSONDecodeError, IndexError) as e:
-        raise ValueError(f"Gemini returned malformed JSON: {e}\n\nRaw response:\n{raw}")
+        raise ValueError(f"Claude returned malformed JSON: {e}\n\nRaw response:\n{raw}")
 
     payload = plan.get("payload", {})
     explanation = plan.get("explanation", "")
