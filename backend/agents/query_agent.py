@@ -12,20 +12,36 @@ Available Crustdata endpoint:
 POST https://api.crustdata.com/company/search
 Headers required: Authorization: Bearer {key}, x-api-version: 2025-11-01, Content-Type: application/json
 
-Filter structure:
-- Single filter: {"field": "field_name", "type": "operator", "value": value}
-- AND group: {"op": "and", "conditions": [...]}
-- OR group: {"op": "or", "conditions": [...]}
+Available operators:
+- = (equals)
+- != (not equals)
+- < (less than)
+- > (greater than)
+- =< (less than or equal — NOTE: use =< not <=)
+- => (greater than or equal — NOTE: use => not >=)
+- in (value is a list)
+- not_in
+- contains
+- not_contains
 
-Available operators: = | in | > | < | >= | <=
+CRITICAL: Never use >= or <=. Always use => and =< instead. Crustdata will reject >= and <=.
+
+Filter structure — single condition (do NOT wrap a single filter in op/conditions):
+{"field": "locations.country", "type": "=", "value": "USA"}
+
+Filter structure — multiple conditions with AND:
+{"op": "and", "conditions": [
+  {"field": "field1", "type": "=", "value": "val1"},
+  {"field": "field2", "type": ">", "value": 100}
+]}
 
 Key searchable fields for company search:
 - basic_info.name — company name (type: =)
 - basic_info.primary_domain — website domain (type: =)
-- basic_info.year_founded — year founded (type: >, <, >=, <=)
+- basic_info.year_founded — year founded (type: >, <, =>, =<)
 - locations.country — country only, use "USA" for United States (type: =, in). NOTE: city-level filtering is NOT supported. If user asks for a specific city, filter by country only and mention in the explanation that city filtering is unavailable.
-- headcount.total — total employees (type: >, <, >=, <=)
-- funding.total_investment_usd — total funding in USD (type: >, <, >=, <=)
+- headcount.total — total employees (type: >, <, =>, =<)
+- funding.total_investment_usd — total funding in USD (type: >, <, =>, =<)
 - funding.last_round_type — funding stage e.g. "Series A", "Series B", "Seed" (type: =, in)
 - taxonomy.professional_network_industry — industry e.g. "Software Development", "Financial Services", "Healthcare" (type: =, in)
 
