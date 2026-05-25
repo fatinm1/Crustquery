@@ -9,60 +9,42 @@ SYSTEM_PROMPT = """You are an API orchestration agent for Crustdata, a B2B data 
 Your job is to parse a natural language query and return a structured JSON execution plan.
 
 Available Crustdata endpoint:
-POST https://api.crustdata.com/company/search
-Headers required: Authorization: Bearer {key}, x-api-version: 2025-11-01, Content-Type: application/json
+POST https://api.crustdata.com/screener/screen/
+Auth header: Authorization: Token {key}
 
-Available operators:
-- = (equals)
-- != (not equals)
-- < (less than)
-- > (greater than)
-- =< (less than or equal — NOTE: use =< not <=)
-- => (greater than or equal — NOTE: use => not >=)
-- in (value is a list)
-- not_in
-- contains
-- not_contains
+Filter structure — always use op/conditions even for a single filter:
+{
+  "filters": {
+    "op": "and",
+    "conditions": [
+      {"column": "column_name", "type": "operator", "value": value}
+    ]
+  },
+  "offset": 0,
+  "count": 25
+}
 
-CRITICAL: Never use >= or <=. Always use => and =< instead. Crustdata will reject >= and <=.
+Available operators: =, !=, >, >=, <, <=
+Note: >= and <= ARE valid for this endpoint.
 
-Filter structure — single condition (do NOT wrap a single filter in op/conditions):
-{"field": "locations.country", "type": "=", "value": "USA"}
-
-Filter structure — multiple conditions with AND:
-{"op": "and", "conditions": [
-  {"field": "field1", "type": "=", "value": "val1"},
-  {"field": "field2", "type": ">", "value": 100}
-]}
-
-Key searchable fields for company search:
-- basic_info.name — company name (type: =)
-- basic_info.primary_domain — website domain (type: =)
-- basic_info.year_founded — year founded (type: >, <, =>, =<)
-- locations.country — use exact country names as they appear in Crustdata (type: =, in). Common values: "USA" for United States, "United Kingdom" for UK, "India" for India, "Canada" for Canada, "Germany" for Germany, "France" for France, "Australia" for Australia. Always use "USA" not "United States" or "US". NOTE: city-level filtering is NOT supported. If user asks for a specific city, filter by country only and mention in the explanation that city filtering is unavailable.
-- headcount.total — total employees (type: >, <, =>, =<)
-- funding.total_investment_usd — total funding in USD (type: >, <, =>, =<)
-- funding.last_round_type — funding stage e.g. "Series A", "Series B", "Seed" (type: =, in)
-- taxonomy.professional_network_industry — industry e.g. "Software Development", "Financial Services", "Healthcare" (type: =, in)
+Available columns:
+- company_name — company name (type: =, contains)
+- headcount — total employees (type: =, !=, >, >=, <, <=)
+- headcount_qoq_pct — headcount growth quarter over quarter % (type: >, >=, <, <=)
+- largest_headcount_country — country where most employees are based (type: =). Common values: "USA", "India", "United Kingdom", "Canada", "Germany", "France", "Australia". Always use "USA" not "United States" or "US". City-level filtering is NOT supported — filter by country only.
+- total_funding_raised_usd — total funding raised in USD (type: =, !=, >, >=, <, <=)
+- days_since_last_fundraise — days since last funding round (type: >, >=, <, <=)
 
 Always return a JSON object with this exact structure and nothing else:
 {
-  "endpoint": "POST /company/search",
+  "endpoint": "POST /screener/screen/",
   "payload": {
-    "filters": {},
-    "fields": [
-      "crustdata_company_id",
-      "basic_info.name",
-      "basic_info.primary_domain",
-      "headcount.total",
-      "locations.country",
-      "funding.total_investment_usd",
-      "funding.last_round_type",
-      "taxonomy.professional_network_industry",
-      "basic_info.year_founded"
-    ],
-    "sorts": [],
-    "limit": 25
+    "filters": {
+      "op": "and",
+      "conditions": []
+    },
+    "offset": 0,
+    "count": 25
   },
   "explanation": "Human readable explanation of what you searched for"
 }"""
@@ -103,10 +85,9 @@ async def run_query(user_query: str) -> dict:
     explanation = plan.get("explanation", "")
 
     response = httpx.post(
-        "https://api.crustdata.com/company/search",
+        "https://api.crustdata.com/screener/screen/",
         headers={
-            "Authorization": f"Bearer {crustdata_key}",
-            "x-api-version": "2025-11-01",
+            "Authorization": f"Token {crustdata_key}",
             "Content-Type": "application/json",
         },
         json=payload,
@@ -123,14 +104,8 @@ async def run_query(user_query: str) -> dict:
     logging.info(f"Crustdata raw response keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
     logging.info(f"Crustdata raw response sample: {str(data)[:500]}")
 
-    results = (
-        data.get("companies") or
-        data.get("data") or
-        data.get("results") or
-        data.get("hits") or
-        []
-    )
-    total_count = data.get("total_count", len(results))
+    results = data.get("records") or []
+    total_count = data.get("total_count") or len(results)
 
     if total_count == 0 or len(results) == 0:
         explanation += " No results found — try broadening your query (e.g. remove location or headcount constraints)."
@@ -139,5 +114,5 @@ async def run_query(user_query: str) -> dict:
         "results": results,
         "total_count": total_count,
         "explanation": explanation,
-        "api_calls_made": [plan.get("endpoint", "POST /company/search")],
+        "api_calls_made": [plan.get("endpoint", "POST /screener/screen/")],
     }
