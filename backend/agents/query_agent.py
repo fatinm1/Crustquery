@@ -23,8 +23,7 @@ Key searchable fields for company search:
 - basic_info.name — company name (type: =)
 - basic_info.primary_domain — website domain (type: =)
 - basic_info.year_founded — year founded (type: >, <, >=, <=)
-- locations.country — country, use "USA" for United States (type: =, in)
-- locations.city — city name (type: =)
+- locations.country — country only, use "USA" for United States (type: =, in). NOTE: city-level filtering is NOT supported. If user asks for a specific city, filter by country only and mention in the explanation that city filtering is unavailable.
 - headcount.total — total employees (type: >, <, >=, <=)
 - funding.total_investment_usd — total funding in USD (type: >, <, >=, <=)
 - funding.last_round_type — funding stage e.g. "Series A", "Series B", "Seed" (type: =, in)
@@ -41,7 +40,6 @@ Always return a JSON object with this exact structure and nothing else:
       "basic_info.primary_domain",
       "headcount.total",
       "locations.country",
-      "locations.city",
       "funding.total_investment_usd",
       "funding.last_round_type",
       "taxonomy.professional_network_industry",
