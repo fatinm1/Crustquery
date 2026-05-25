@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import httpx
 import anthropic
@@ -99,7 +100,16 @@ async def run_query(user_query: str) -> dict:
         response.raise_for_status()
         data = response.json()
 
-    results = data.get("results", data if isinstance(data, list) else [])
+    logging.info(f"Crustdata raw response keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+    logging.info(f"Crustdata raw response sample: {str(data)[:500]}")
+
+    results = (
+        data.get("companies") or
+        data.get("data") or
+        data.get("results") or
+        data.get("hits") or
+        []
+    )
     total_count = data.get("total_count", len(results))
 
     if total_count == 0 or len(results) == 0:
