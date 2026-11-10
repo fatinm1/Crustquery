@@ -325,3 +325,9 @@ allow_origins=["https://your-app.vercel.app"]
 ## License
 
 MIT
+
+## Reliability and scope
+
+Generated payloads are validated against an allowlist of fields/operators and a 25-result cap before execution. Invalid plans are rejected, not forwarded. Provider calls use async clients; upstream API errors retain their HTTP status. Run offline plan tests with `cd backend && python -m pytest tests -q`. They validate constraints, not natural-language interpretation accuracy. Production hosting still needs authenticated usage quotas and monitoring for paid API spend.
+
+Public AI routes have a per-process rolling budget (default 10 starts/minute, 2 concurrent). Configure `AI_REQUESTS_PER_MINUTE` and `AI_MAX_CONCURRENT` explicitly for the deployment. Rejected requests return 429 without starting provider work. This intentionally bounds the whole demo, not individual identities; multi-worker deployments need a shared external quota and authentication.
