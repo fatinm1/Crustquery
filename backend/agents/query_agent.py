@@ -4,6 +4,7 @@ import os
 import httpx
 import anthropic
 from fastapi import HTTPException
+from plans import QueryPayload
 
 SYSTEM_PROMPT = """You are an API orchestration agent for Crustdata, a B2B data platform.
 Your job is to parse a natural language query and return a structured JSON execution plan.
@@ -84,9 +85,9 @@ def _extract_json(text: str) -> dict:
 async def run_query(user_query: str) -> dict:
     crustdata_key = os.getenv("CRUSTDATA_API_KEY")
 
-    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-    response = client.messages.create(
+    response = await client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1000,
         messages=[
@@ -99,26 +100,26 @@ async def run_query(user_query: str) -> dict:
     try:
         plan = _extract_json(raw)
     except (json.JSONDecodeError, IndexError) as e:
-        raise ValueError(f"Claude returned malformed JSON: {e}\n\nRaw response:\n{raw}")
+        raise ValueError("The model returned an invalid execution plan") from e
 
-    payload = plan.get("payload", {})
+    payload = QueryPayload.model_validate(plan.get("payload", {})).model_dump()
     explanation = plan.get("explanation", "")
 
-    response = httpx.post(
-        "https://api.crustdata.com/company/search",
-        headers={
-            "Authorization": f"Bearer {crustdata_key}",
-            "x-api-version": "2025-11-01",
-            "Content-Type": "application/json",
-        },
-        json=payload,
-        timeout=30.0,
-    )
+    async with httpx.AsyncClient(timeout=30.0) as http:
+        response = await http.post(
+            "https://api.crustdata.com/company/search",
+            headers={
+                "Authorization": f"Bearer {crustdata_key}",
+                "x-api-version": "2025-11-01",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
 
     if response.status_code != 200:
         logging.error(f"Crustdata error. Payload sent:\n{json.dumps(payload, indent=2)}")
         logging.error(f"Crustdata error response: {response.text}")
-        raise HTTPException(status_code=500, detail=f"Crustdata API error: {response.text}")
+        raise HTTPException(status_code=502, detail="Upstream company search failed")
 
     data = response.json()
 

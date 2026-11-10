@@ -1,7 +1,8 @@
+from budget import AIBudgetMiddleware
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,6 +10,8 @@ load_dotenv()
 from agents.query_agent import run_query
 
 app = FastAPI(title="CrustQuery API")
+
+app.add_middleware(AIBudgetMiddleware, paths=['/query'])
 
 cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
 
@@ -22,7 +25,7 @@ app.add_middleware(
 
 
 class QueryRequest(BaseModel):
-    query: str
+    query: str = Field(min_length=1, max_length=2000)
 
 
 @app.post("/query")
@@ -33,10 +36,12 @@ async def query(request: QueryRequest):
     try:
         result = await run_query(request.query)
         return result
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Query service unavailable")
 
 
 @app.get("/health")
